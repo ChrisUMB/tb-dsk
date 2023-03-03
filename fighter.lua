@@ -32,6 +32,7 @@
     form of manipulation or reading that might be needed.
 ]]
 
+---@class joint
 joint = {}
 
 function joint:__index(name)
@@ -135,6 +136,7 @@ function joint:get_name()
     return JOINT.ID[self.joint_id]
 end
 
+---@class part
 part = {}
 
 function part:__index(name)

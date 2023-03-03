@@ -13,7 +13,18 @@
         obj:set_pos(0, 0, 0)
 ]]
 
+---@class object
 object = {}
+
+---@class SHAPE : number
+---@field SPHERE SHAPE
+---@field BOX SHAPE
+---@field CAPSULE SHAPE
+SHAPE = {
+    SPHERE = 1,
+    BOX = 2,
+    CAPSULE = 3,
+}
 
 function object:__index(name)
     return rawget(object, name)
@@ -21,16 +32,41 @@ end
 
 function object.get(object_id)
     if object_id < 1 or object_id > MAX_ENV_OBJECTS then
-        assert("object.get(object_id): received an invalid object ID: " .. tostring(object_id))
+        assert("object.get(object_id): received an invalid object ID (out of bounds): " .. tostring(object_id))
+        return nil
+    end
+
+    if get_obj_pos(object_id - 1) == nil then
+        --assert("object.get(object_id): received an invalid object ID (non-existing): " .. tostring(object_id))
         return nil
     end
 
     local result = {
         object_id = object_id
     }
-    
+
     setmetatable(result, object)
     return result
+end
+
+---@return SHAPE The shape of the object.
+function object:get_shape()
+    if self == object then
+        assert("object:get_type() illegally called statically.")
+        return nil
+    end
+
+    local _, y, z = get_obj_sides(self.object_id - 1)
+
+    if y == 0 and z == 0 then
+        return SHAPE.SPHERE
+    end
+
+    if z == 0 then
+        return SHAPE.CAPSULE
+    end
+
+    return SHAPE.BOX
 end
 
 function object:get_position()
@@ -128,8 +164,6 @@ function object:set_angular_velocity(...)
     set_obj_angular_vel(self.object_id - 1, velocity.x, velocity.y, velocity.z)
 end
 
-
---TODO: get_linear_velocity() | set_linear_velocity(), same for angular when it exists in Toribash
 function object:get_force()
     if self == object then
         assert("object:get_force() illegally called statically.")

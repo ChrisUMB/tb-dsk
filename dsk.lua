@@ -18,6 +18,7 @@ local s, e = pcall(function()
     dofile("dsk/fighter.lua")
     dofile("dsk/objects.lua")
     dofile("dsk/world.lua")
+    dofile("dsk/raycast.lua")
 end)
 
 if not s then echo(tostring(e) .. "\n") return end

@@ -427,6 +427,43 @@ function quat.look_at(dir, up)
     return quat(x, y, z, w)
 end
 
+function quat.from_forward(...)
+    local forward = vec3(...)
+
+    if forward[1] == 0 and forward[2] == 0 and forward[3] == 0 then
+        return nil
+    end
+
+    -- Choose an arbitrary up vector that is not parallel to forward
+    local up = { 0, 1, 0 }
+    if math.abs(forward[2]) > 0.99 then
+        up = { 1, 0, 0 }
+    end
+
+    -- Calculate the right vector by taking the cross product of forward and up
+    local right = { forward[2] * up[3] - forward[3] * up[2],
+                    forward[3] * up[1] - forward[1] * up[3],
+                    forward[1] * up[2] - forward[2] * up[1] }
+
+    -- Normalize the right vector
+    local length = math.sqrt(right[1] ^ 2 + right[2] ^ 2 + right[3] ^ 2)
+    right = { right[1] / length, right[2] / length, right[3] / length }
+
+    -- Calculate the up vector by taking the cross product of right and forward
+    up = { right[2] * forward[3] - right[3] * forward[2],
+           right[3] * forward[1] - right[1] * forward[3],
+           right[1] * forward[2] - right[2] * forward[1] }
+
+    -- Calculate the w, x, y, z components of the quaternion
+    local w = math.sqrt(1 + right[1] + up[2] + forward[3]) / 2
+    local x = (up[3] - forward[2]) / (4 * w)
+    local y = (forward[1] - right[3]) / (4 * w)
+    local z = (right[2] - up[1]) / (4 * w)
+
+    -- Return the quaternion as a table
+    return quat(x, y, z, w)
+end
+
 function quat.new(x_or_table, y, z, w)
     if x_or_table == nil then
         return quat(0, 0, 0, 1)

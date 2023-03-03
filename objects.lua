@@ -14,6 +14,7 @@
 ]]
 
 ---@class object
+---@field object_id number
 object = {}
 
 ---@class SHAPE : number

@@ -33,6 +33,8 @@
 ]]
 
 ---@class joint
+---@field fighter_id number
+---@field joint_id number
 joint = {}
 
 function joint:__index(name)

@@ -428,9 +428,18 @@ function quat.look_at(dir, up)
 end
 
 function quat.from_forward(...)
+    local args = {...}
+    if not args or #args == 0 or args[1] == nil then
+        return nil
+    end
+
     local forward = vec3(...)
 
     if forward[1] == 0 and forward[2] == 0 and forward[3] == 0 then
+        return nil
+    end
+
+    if forward[1] ~= forward[1] or forward[2] ~= forward[2] or forward[3] ~= forward[3] then
         return nil
     end
 

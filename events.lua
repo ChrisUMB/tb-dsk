@@ -58,6 +58,26 @@ local events = {
     "draw2d"
 }
 
+EVENTS = {
+    GAME_START = "game-start",
+    GAME_FRAME = "game-frame",
+    GAME_END = "game-end",
+
+    MATCH_START = "match-start",
+    MATCH_FRAME = "match-frame",
+    MATCH_END = "match-end",
+    POST_MATCH_START = "post-match-start",
+    POST_MATCH_FRAME = "post-match-frame",
+    POST_MATCH_END = "post-match-end",
+
+    REPLAY_START = "replay-start",
+    REPLAY_FRAME = "replay-frame",
+    REPLAY_END = "replay-end",
+
+    WINDOW_RESIZE = "window-resize",
+    DRAW2D = "draw2d"
+}
+
 function unlisten(id)
     for event, listener_list in pairs(listeners) do
         listener_list[id] = nil

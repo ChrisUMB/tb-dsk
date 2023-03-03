@@ -205,7 +205,7 @@ function part:get_rotation()
         return nil
     end
 
-    return mat4(get_body_info(self.fighter_id - 1, self.part_id - 1).rot):to_quaternion()
+    return mat4(get_body_info(self.fighter_id - 1, self.part_id - 1).rot):to_quaternion():conjugate()
 end
 
 function part:set_rotation(...)

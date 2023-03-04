@@ -204,6 +204,60 @@ function draw_quad_coords(x, y, width, height, color, u, v, s, t, texture_id)
     draw_quad(x, y, width, height, texture_id, 2, color[1], color[2], color[3], color[4], s - u, t - v, u, v)
 end
 
+CLIP_RESULT = {
+    FULLY_VISIBLE = 1,
+    FULLY_HIDDEN = 2,
+    PARTIALLY_VISIBLE = 3
+}
+
+---@param x number The x position of the quad.
+---@param y number The y position of the quad.
+---@param width number The width of the quad.
+---@param height number The height of the quad.
+---@param color vec4 The color of the quad.
+---@param texture_id number The texture id to use.
+---@param texture_width number The width of the texture.
+---@param texture_height number The height of the texture.
+---@param area_x number The x position of the area to clip within.
+---@param area_y number The y position of the area to clip within.
+---@param area_width number The width of the area to clip within.
+---@param area_height number The height of the area to clip within.
+function draw_clipped_quad(x, y, width, height, color, texture_id, texture_width, texture_height, area_x, area_y, area_width, area_height)
+    if x > area_x + area_width or y > area_y + area_height then
+        return CLIP_RESULT.FULLY_HIDDEN
+    end
+
+    local lx = x - area_x
+    local hx = area_x + area_width - x
+
+    local ly = y - area_y
+    local hy = area_y + area_height - y
+
+    local u = math.min(math.max(-lx / width, 0), 1)
+    local v = math.min(math.max(-ly / height, 0), 1)
+    local s = math.min(math.max(hx / width, 0), 1)
+    local t = math.min(math.max(hy / height, 0), 1)
+
+    x = x + u * width
+    y = y + v * height
+
+    width = width * (s - u)
+    height = height * (t - v)
+
+    if texture_id ~= nil then
+        draw_quad_coords(x, y, width, height, color, u * texture_width, v * texture_height, s * texture_width, t * texture_height, texture_id)
+    else
+        set_color(color[1], color[2], color[3], color[4])
+        draw_quad(x, y, width, height)
+    end
+
+    if u == 0 and v == 0 and s == 1 and t == 1 then
+        return CLIP_RESULT.FULLY_VISIBLE
+    else
+        return CLIP_RESULT.PARTIALLY_VISIBLE
+    end
+end
+
 -- function io.write_line(line)
 --     local line = line:find("\n$") and line or (line .. "\n")
 --     io.write(line)

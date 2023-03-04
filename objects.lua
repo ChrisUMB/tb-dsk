@@ -124,6 +124,10 @@ function object:get_linear_velocity()
         return nil
     end
 
+    if self:is_static() then
+        return vec3(0, 0, 0)
+    end
+
     return vec3(get_obj_linear_vel(self.object_id - 1))
 end
 
@@ -141,6 +145,10 @@ function object:get_angular_velocity()
     if self == object then
         assert("object:get_angular_velocity() illegally called statically.")
         return nil
+    end
+
+    if self:is_static() then
+        return vec3(0, 0, 0)
     end
 
     return vec3(get_obj_angular_vel(self.object_id - 1))
@@ -229,4 +237,21 @@ function object:set_flags(flags)
     end
 
     set_obj_flag(self.object_id - 1, flags)
+end
+
+local FLAGS = {
+    NORMAL = 0,
+    ALT = 1,
+    SHIELD = 2,
+    WEAPON = 6,
+    STATIC = 8,
+    UNGRIPPABLE = 16,
+    DQ_DISABLE = 32,
+    NO_DAMAGE = 64
+}
+
+function object:is_static()
+    local flag = self:get_flags()
+
+    return bit.band(flag, FLAGS.STATIC) ~= 0
 end

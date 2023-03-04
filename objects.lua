@@ -95,7 +95,7 @@ function object:get_rotation()
         return nil
     end
 
-    return mat4(get_obj_rot(self.object_id - 1)):to_quaternion()
+    return mat4(get_obj_rot(self.object_id - 1)):to_quaternion():conjugate()
 end
 
 function object:set_rotation(...)
@@ -105,7 +105,8 @@ function object:set_rotation(...)
     end
 
     local rotation = quat(...)
-    set_obj_rot(self.object_id - 1, rotation.x, rotation.y, rotation.z, rotation.w)
+    --set_obj_rot(self.object_id - 1, rotation.x, rotation.y, rotation.z, rotation.w)
+    set_obj_rot_m(self.object_id - 1, mat4(rotation):to_tb_matrix())
 end
 
 function object:get_scale()

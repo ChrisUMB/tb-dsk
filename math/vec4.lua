@@ -23,8 +23,16 @@ function vec4:__index(name)
     return rawget(self, name) or rawget(vec4, name)
 end
 
+function vec4:__newindex(key, value)
+    if type(key) == "number" then
+        key = components[key]
+    end
+
+    rawset(self, key, value)
+end
+
 function vec4:add(...)
-    other = vec4(...)
+    local other = vec4(...)
     return vec4(self.x + other.x, self.y + other.y, self.z + other.z, self.w + other.w)
 end
 
@@ -138,7 +146,7 @@ end
 
 function vec4.new(x_or_table, y, z, w)
     if x_or_table == nil then
-        return nil
+        return vec4(0, 0, 0, 0)
     end
 
     local result = nil

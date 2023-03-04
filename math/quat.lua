@@ -428,49 +428,34 @@ function quat.look_at(dir, up)
 end
 
 function quat.from_forward(...)
-    local args = {...}
-    if not args or #args == 0 or args[1] == nil then
-        return nil
-    end
-
     local forward = vec3(...)
 
-    if forward[1] == 0 and forward[2] == 0 and forward[3] == 0 then
-        return nil
+    if forward:length_squared() == 0.0 then
+        return quat()
     end
 
-    if forward[1] ~= forward[1] or forward[2] ~= forward[2] or forward[3] ~= forward[3] then
-        return nil
+    forward = forward:normalize()
+
+    local right = vec3(0,0,1)
+    if right:dot(forward) > 0.9 then
+        right = vec3(1,0,0)
     end
 
-    -- Choose an arbitrary up vector that is not parallel to forward
-    local up = { 0, 1, 0 }
-    if math.abs(forward[2]) > 0.99 then
-        up = { 1, 0, 0 }
-    end
+    right = forward:cross(right):normalize()
+    local up = forward:cross(right):normalize()
 
-    -- Calculate the right vector by taking the cross product of forward and up
-    local right = { forward[2] * up[3] - forward[3] * up[2],
-                    forward[3] * up[1] - forward[1] * up[3],
-                    forward[1] * up[2] - forward[2] * up[1] }
+    local m = mat4()
+    m.m00 = right.x
+    m.m10 = right.y
+    m.m20 = right.z
+    m.m01 = up.x
+    m.m11 = up.y
+    m.m21 = up.z
+    m.m02 = forward.x
+    m.m12 = forward.y
+    m.m22 = forward.z
 
-    -- Normalize the right vector
-    local length = math.sqrt(right[1] ^ 2 + right[2] ^ 2 + right[3] ^ 2)
-    right = { right[1] / length, right[2] / length, right[3] / length }
-
-    -- Calculate the up vector by taking the cross product of right and forward
-    up = { right[2] * forward[3] - right[3] * forward[2],
-           right[3] * forward[1] - right[1] * forward[3],
-           right[1] * forward[2] - right[2] * forward[1] }
-
-    -- Calculate the w, x, y, z components of the quaternion
-    local w = math.sqrt(1 + right[1] + up[2] + forward[3]) / 2
-    local x = (up[3] - forward[2]) / (4 * w)
-    local y = (forward[1] - right[3]) / (4 * w)
-    local z = (right[2] - up[1]) / (4 * w)
-
-    -- Return the quaternion as a table
-    return quat(x, y, z, w)
+    return m:to_quaternion()
 end
 
 function quat.new(x_or_table, y, z, w)

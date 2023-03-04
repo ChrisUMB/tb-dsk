@@ -6,11 +6,19 @@
 ]]
 
 -- Standard lua has table.unpack, Toribash has just "unpack", not very cool.
-table.unpack = unpack
+if not table.unpack then
+    table.unpack = unpack
+end
 
 -- This is just because println() is a standard elsewhere, and this also does automatically apply tostring().
-function println(v)
-    echo(tostring(v) .. "\n")
+if echo then
+    function println(v)
+        echo(tostring(v) .. "\n")
+    end
+else
+    function println(v)
+        print(tostring(v))
+    end
 end
 
 function tab_string(tabs)

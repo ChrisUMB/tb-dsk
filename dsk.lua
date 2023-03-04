@@ -21,7 +21,14 @@ local s, e = pcall(function()
     dofile("dsk/raycast.lua")
 end)
 
-if not s then echo(tostring(e) .. "\n") return end
+if not s then
+    if not echo then
+        print(tostring(e) .. "\n")
+    else
+        echo(tostring(e) .. "\n")
+    end
+    return
+end
  --println("^72Decap Scripting Kit has been successfully initiated.")
 
 -- [ Testing ] --

@@ -57,17 +57,7 @@ function object:get_shape()
         return nil
     end
 
-    local _, y, z = get_obj_sides(self.object_id - 1)
-
-    if y == 0 and z == 0 then
-        return SHAPE.SPHERE
-    end
-
-    if z == 0 then
-        return SHAPE.CAPSULE
-    end
-
-    return SHAPE.BOX
+    return get_obj_shape(self.object_id - 1) + 1
 end
 
 function object:get_position()

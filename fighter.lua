@@ -134,6 +134,15 @@ function joint:get_state()
     return get_joint_info(self.fighter_id - 1, self.joint_id - 1).state
 end
 
+function joint:get_radius()
+    if self == joint then
+        assert("joint:get_radius() illegally called statically.")
+        return
+    end
+
+    return get_joint_radius(self.fighter_id - 1, self.joint_id - 1)
+end
+
 function joint:get_name()
     return JOINT.ID[self.joint_id]
 end

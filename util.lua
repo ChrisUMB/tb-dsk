@@ -189,6 +189,21 @@ function hsv_to_rgb(h, s, v)
     return vec3(r, g, b)
 end
 
+---@param x number The x position of the quad.
+---@param y number The y position of the quad.
+---@param width number The width of the quad.
+---@param height number The height of the quad.
+---@param color vec4 The color of the quad.
+---@param u number The u coordinate of the texture.
+---@param v number The v coordinate of the texture.
+---@param s number The s coordinate of the texture.
+---@param t number The t coordinate of the texture.
+---@param texture_id number The texture id to use.
+function draw_quad_coords(x, y, width, height, color, u, v, s, t, texture_id)
+    color = color or vec4(1, 1, 1, 1)
+    draw_quad(x, y, width, height, texture_id, 2, color[1], color[2], color[3], color[4], s - u, t - v, u, v)
+end
+
 -- function io.write_line(line)
 --     local line = line:find("\n$") and line or (line .. "\n")
 --     io.write(line)

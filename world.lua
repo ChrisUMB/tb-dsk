@@ -36,12 +36,12 @@
 ---@field angular_velocity vec3 Angular velocity of the body part
 ---@field linear_velocity vec3 Linear velocity of the body part
 
----@class fd_player Frame data player
+---@class fd_fighter Frame data player
 ---@field parts fd_part[] Body parts
 ---@field joints JointInfoState[] Joints
 
 ---@class fd_frame
----@field players fd_player[] Players
+---@field players fd_fighter[] Players
 
 ---@type fd_frame[] Frame data, keyed by frame index
 local frame_data = {}
@@ -80,19 +80,48 @@ local function log_object_data(object_index, state, frame, table)
 end
 
 local function log_player_data(player, state, frame)
-    local player_data = {}
+    local player_data = world.get_fighter_data(fighter.get(player + 1))
 
-    ---@type fd_part[]
-    local parts = {}
+    local current_frame_data = frame_data[frame] or {}
+    if current_frame_data.players == nil then
+        current_frame_data.players = {}
+    end
+
+    -- We have to apply these to the last frame.
+    local last_frame_data = current_frame_data[frame - 1]
+
+    if last_frame_data ~= nil then
+        -- last_frame_data = last_frame_data.players or {}
+        local last_player_data = last_frame_data.players or {}
+        last_player_data[player + 1].grips = player_data.grips
+        last_player_data[player + 1].damages = player_data.damages
+        last_frame_data.players = last_player_data
+        current_frame_data[frame - 1] = last_frame_data
+    end
+
+    local new_data = current_frame_data[frame] or {}
+    local players = new_data.players or {}
+    players[player + 1] = player_data
+    new_data.players = players
+    current_frame_data[frame] = new_data
+end
+
+---@class world World data class, contains all the data about the world.
+world = {}
+
+---@param fighter fighter Player index
+---@return fd_fighter Fighter data
+function world.get_fighter_data(fighter)
+    local fighter_data = {}
+    local part_data = {}
 
     local joints = {}
     local grips = {}
 
-    local fighter = fighter.get(player + 1)
     for i, v in pairs(PART.NAME) do
         local part = fighter:get_part(i)
 
-        parts[v] = {
+        part_data[v] = {
             position = part:get_position(),
             rotation = part:get_rotation(),
             angular_velocity = part:get_angular_velocity(),
@@ -102,16 +131,16 @@ local function log_player_data(player, state, frame)
 
     local damages = nil
 
-    for v = 0, 19 do
-        local info = get_joint_info(player, v)
-        local state = info.state
+    for i, v in pairs(JOINT.NAME) do
+        local joint = fighter:get_joint(v)
+        local state = joint:get_state()
 
-        if get_joint_dismember(player, v) then
+        if joint:is_dismembered() then
             if damages == nil then
                 damages = {}
             end
             damages[v] = 1
-        elseif get_joint_fracture(player, v) then
+        elseif joint:is_fractured() then
             if damages == nil then
                 damages = {}
             end
@@ -121,39 +150,43 @@ local function log_player_data(player, state, frame)
         joints[v] = state
     end
 
-    grips = { get_grip_info(player, 12), get_grip_info(player, 11) }
+    grips = { fighter:get_grip(PART.NAME.R_HAND), fighter:get_grip(PART.NAME.L_HAND) }
 
-    player_data.parts = parts
-    player_data.joints = joints
-
-    player_data.score = get_score(player)
-
-    local data = frame_data[frame] or {}
-    if data.players == nil then
-        data.players = {}
-    end
-
-    -- We have to apply these to the last frame.
-    local last_frame_data = frame_data[frame - 1]
-
-    if last_frame_data ~= nil then
-        -- last_frame_data = last_frame_data.players or {}
-        local last_player_data = last_frame_data.players or {}
-        last_player_data[player + 1].grips = grips
-        last_player_data[player + 1].damages = damages
-        last_frame_data.players = last_player_data
-        frame_data[frame - 1] = last_frame_data
-    end
-
-    local new_data = frame_data[frame] or {}
-    local players = new_data.players or {}
-    players[player + 1] = player_data
-    new_data.players = players
-    frame_data[frame] = new_data
+    fighter_data.parts = part_data
+    fighter_data.joints = joints
+    fighter_data.grips = grips
+    fighter_data.damages = damages
+    fighter_data.score = fighter:get_score()
+    return fighter_data
 end
 
----@class world World data class, contains all the data about the world.
-world = {}
+function world.set_fighter_data(fighter, fighter_data)
+    local player = fighter.fighter_id - 1
+    for i, v in pairs(PART.NAME) do
+        local part = fighter:get_part(v)
+        local part_data = fighter_data.parts[v]
+
+        part:set_position(part_data.position)
+        part:set_rotation(part_data.rotation)
+        part:set_angular_velocity(part_data.angular_velocity)
+        part:set_linear_velocity(part_data.linear_velocity)
+    end
+
+    for i, v in pairs(JOINT.NAME) do
+        if fighter_data.damages ~= nil then
+            if fighter_data.damages[v] == 1 then
+                set_joint_dismember(player, v - 1)
+            elseif fighter_data.damages[v] == 0 then
+                set_joint_fracture(player, v - 1)
+            end
+        end
+
+        set_joint_state(player, v - 1, fighter_data.joints[v])
+    end
+
+    set_grip_info(player, 12, fighter_data.grips[1])
+    set_grip_info(player, 11, fighter_data.grips[2])
+end
 
 ---@param frame number|nil Frame to get data for
 ---@return fd_frame|nil Frame data for the given frame, or the last frame if no frame is given. Returns nil if no frame data is available.
@@ -178,7 +211,6 @@ end
 local function log_match_frame()
     local state = get_world_state()
     local frame = state.match_frame
-
 
     for i = 1, state.num_players do
         log_player_data(i - 1, state, frame + 1, frame_data)

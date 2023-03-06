@@ -10,6 +10,12 @@ if not table.unpack then
     table.unpack = unpack
 end
 
+if not math.round then
+    function math.round(n)
+        return math.floor(n + 0.5)
+    end
+end
+
 -- This is just because println() is a standard elsewhere, and this also does automatically apply tostring().
 if echo then
     function println(v)

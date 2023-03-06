@@ -117,6 +117,11 @@ function vec2:normalize()
     return self / self:length()
 end
 
+function vec2:distance(...)
+    local other = vec2(...)
+    return (self - other):length()
+end
+
 function vec2:cross(...)
     local other = vec2(...)
     return self.x * other.y - self.y * other.x

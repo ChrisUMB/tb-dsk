@@ -1,34 +1,36 @@
 -- [ Decap Scripting Kit ] --
 
-local s, e = pcall(function()
-    dofile("dsk/util.lua")
-    dofile("dsk/delay.lua")
-    dofile("dsk/math/vec2.lua")
-    dofile("dsk/math/vec3.lua")
-    dofile("dsk/math/vec4.lua")
-    dofile("dsk/math/quat.lua")
-    dofile("dsk/math/mat4.lua")
+--local s, e = pcall(function()
+--    function println(...) end
 
-    dofile("dsk/metrics.lua")
-    dofile("dsk/constants.lua")
+dofile("dsk/util.lua")
+dofile("dsk/delay.lua")
+dofile("dsk/math/vec2.lua")
+dofile("dsk/math/vec3.lua")
+dofile("dsk/math/vec4.lua")
+dofile("dsk/math/quat.lua")
+dofile("dsk/math/mat4.lua")
 
-    dofile("dsk/cmd.lua")
-    dofile("dsk/keyboard.lua")
-    dofile("dsk/events.lua")
-    dofile("dsk/fighter.lua")
-    dofile("dsk/objects.lua")
-    dofile("dsk/world.lua")
-    dofile("dsk/raycast.lua")
-end)
+dofile("dsk/metrics.lua")
+dofile("dsk/constants.lua")
 
-if not s then
-    if not echo then
-        print(tostring(e) .. "\n")
-    else
-        echo(tostring(e) .. "\n")
-    end
-    return
-end
+dofile("dsk/cmd.lua")
+dofile("dsk/keyboard.lua")
+dofile("dsk/events.lua")
+dofile("dsk/fighter.lua")
+dofile("dsk/objects.lua")
+dofile("dsk/world.lua")
+dofile("dsk/raycast.lua")
+--end)
+--
+--if not s then
+--    if not echo then
+--        print(tostring(e) .. "\n")
+--    else
+--        echo(tostring(e) .. "\n")
+--    end
+--    return
+--end
  --println("^72Decap Scripting Kit has been successfully initiated.")
 
 -- [ Testing ] --

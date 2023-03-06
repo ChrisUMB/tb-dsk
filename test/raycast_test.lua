@@ -58,7 +58,6 @@ add_hook("mouse_button_down", "test-raycast", function(button, x, y)
                 return obj:get_position()
             end, function(value)
                 obj:set_position(value)
-                set_ghost(0)
                 set_ghost(2)
             end)
         end

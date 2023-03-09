@@ -79,7 +79,7 @@ local function log_object_data(object_index, state, frame, table)
     table[frame] = table
 end
 
-local function log_player_data(player, state, frame)
+local function log_player_data(player, frame)
     local player_data = world.get_fighter_data(fighter.get(player + 1))
 
     local current_frame_data = frame_data[frame] or {}
@@ -99,11 +99,12 @@ local function log_player_data(player, state, frame)
         current_frame_data[frame - 1] = last_frame_data
     end
 
-    local new_data = current_frame_data[frame] or {}
+    local new_data = frame_data[frame] or {}
     local players = new_data.players or {}
     players[player + 1] = player_data
     new_data.players = players
-    current_frame_data[frame] = new_data
+
+    frame_data[frame] = new_data
 end
 
 ---@class world World data class, contains all the data about the world.
@@ -191,8 +192,6 @@ end
 ---@param frame number|nil Frame to get data for
 ---@return fd_frame|nil Frame data for the given frame, or the last frame if no frame is given. Returns nil if no frame data is available.
 function world.get_frame_data(frame)
-
-
     if not frame then
         frame = get_world_state().match_frame + 1
     end
@@ -211,9 +210,8 @@ end
 local function log_match_frame()
     local state = get_world_state()
     local frame = state.match_frame
-
     for i = 1, state.num_players do
-        log_player_data(i - 1, state, frame + 1, frame_data)
+        log_player_data(i - 1, frame + 1)
     end
 end
 
@@ -228,5 +226,7 @@ listen("match-frame", "dst-world", function(state)
 end)
 
 -- We want the current frame to be logged when the script starts.
+frame_data = {}
+world_data.game_rules = get_game_rules()
 log_match_frame()
 

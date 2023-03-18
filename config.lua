@@ -5,17 +5,15 @@
 ---@class config
 config = {}
 
-function config.write(data, path)
-    --local comments = {} -- a table to store comments
-    --for section, properties in pairs(data) do
-    --    for key, value in pairs(properties) do
-    --        if type(key) == "string" and key:sub(1, 1) == "#" then -- it's a comment
-    --            comments[section] = comments[section] or {}
-    --            comments[section][key:sub(2)] = value -- store the comment
-    --        end
-    --    end
-    --end
+---@param path string The path to the file to read from.
+---@return boolean Whether the file exists.
+function config.exists(path)
+    return Files:open(path).data ~= nil
+end
 
+---@param data table<string, table<string, any>> The data to write to the file.
+---@param path string The path to the file to write to.
+function config.write(data, path)
     local section_names = {} -- a table to store the section names so we can sort them
     for section, _ in pairs(data) do
         table.insert(section_names, section) -- add the section name to the table
@@ -117,4 +115,20 @@ function config.read(path)
     file:close() -- close the file
 
     return data, comments -- return the data and comments tables
+end
+
+--- Checks if the current configuration is missing any properties from the default configuration.
+---@param default_config table The default configuration.
+---@param current_config table The current configuration.
+---@param callback fun(section: string, key: string, value: any):void A callback function that is called when a property is missing from the current configuration.
+function config.missing(default_config, current_config, callback)
+    for section, properties in pairs(default_config) do
+        for key, value in pairs(properties) do
+            if type(key) ~= "string" or key:sub(1, 1) ~= "#" then -- it's a property
+                if current_config[section] == nil or current_config[section][key] == nil then
+                    callback(section, key, value)
+                end
+            end
+        end
+    end
 end

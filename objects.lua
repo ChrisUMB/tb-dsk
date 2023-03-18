@@ -115,6 +115,13 @@ function object:set_scale(...)
     end
 
     local scale = vec3(...)
+
+    if self:get_shape() == SHAPE.SPHERE then
+        scale = vec3(scale.x, scale.x, scale.x)
+    elseif self:get_shape() == SHAPE.CAPSULE then
+        scale = vec3(scale.x, scale.y, scale.x)
+    end
+
     set_obj_sides(self.object_id - 1, scale.x, scale.y, scale.z)
 end
 

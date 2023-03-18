@@ -23,7 +23,9 @@ function config.write(data, path)
 
     table.sort(section_names) -- sort the section names alphabetically
 
-    local file = io.open(path, "w") -- open the file for writing
+    --local file = io.open(path, "w") -- open the file for writing
+    local file = Files:open(path, FILES_MODE_WRITE)
+    file:writeLine()
     for _, section in ipairs(section_names) do
         local properties = data[section]
         file:write(string.format("[%s]\n", section)) -- write the section name
@@ -45,7 +47,7 @@ function config.write(data, path)
                     table.insert(lines, line)
                 end
                 for _, line in ipairs(lines) do
-                    file:write(string.format("# %s\n", line)) -- write the comment
+                    file:writeLine(string.format("# %s", line)) -- write the comment
                 end
                 --file:write(string.format("# %s\n", comment)) -- write the comment
             end
@@ -54,9 +56,9 @@ function config.write(data, path)
             --if type(value) == "string" then -- quote the string value
             --    value_str = string.format('"%s"', value_str)
             --end
-            file:write(string.format("%s = %s\n", key, value_str)) -- write the property
+            file:writeLine(string.format("%s = %s", key, value_str)) -- write the property
         end
-        file:write("\n") -- add an empty line between sections
+        file:writeLine("") -- add an empty line between sections
     end
     file:close() -- close the file
 end
@@ -75,12 +77,14 @@ local function convert_string_to_type(value)
 end
 
 function config.read(path)
-    local file = io.open(path, "r") -- open the file for reading
+    --local file = io.open(path, "r") -- open the file for reading
+    local file = Files:open(path, FILES_MODE_READONLY)
     local data = {}
     local section = nil
     local comment_str = "" -- a string to accumulate comments
 
-    for line in file:lines() do
+    --for line in file:lines() do
+    for line in file:readAll() do
         -- trim leading and trailing whitespace
         line = line:gsub("^%s+", ""):gsub("%s+$", "")
 

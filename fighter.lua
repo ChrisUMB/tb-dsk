@@ -291,6 +291,24 @@ function part:set_force(...)
     set_body_force(self.fighter_id - 1, self.part_id - 1, force.x, force.y, force.z)
 end
 
+function part:get_scale()
+    if self == part then
+        assert("part:get_scale() illegally called statically.")
+        return nil
+    end
+
+    return vec3(get_body_info(self.fighter_id - 1, self.part_id - 1).sides)
+end
+
+function part:get_shape()
+    if self == part then
+        assert("part:get_shape() illegally called statically.")
+        return nil
+    end
+
+    return get_body_info(self.fighter_id - 1, self.part_id - 1).shape + 1
+end
+
 function part:get_id()
     return self.part_id
 end

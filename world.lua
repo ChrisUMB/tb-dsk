@@ -36,12 +36,21 @@
 ---@field angular_velocity vec3 Angular velocity of the body part
 ---@field linear_velocity vec3 Linear velocity of the body part
 
+---@class fd_object Frame data object
+---@field position vec3 Position of the object
+---@field rotation quat Rotation of the object
+---@field angular_velocity vec3 Angular velocity of the object
+---@field linear_velocity vec3 Linear velocity of the object
+---@field color vec4 Color of the object
+---@field scale vec3 Scale of the object
+
 ---@class fd_fighter Frame data player
 ---@field parts fd_part[] Body parts
 ---@field joints JointInfoState[] Joints
 
 ---@class fd_frame
 ---@field players fd_fighter[] Players
+---@field objects fd_object[] Objects
 
 ---@type fd_frame[] Frame data, keyed by frame index
 local frame_data = {}
@@ -53,34 +62,37 @@ local frame_data = {}
 -- This will store data like game rules, winner, etc.
 local world_data = {}
 
-local function log_object_data(object_index, state, frame, table)
-    local s, e = pcall(function()
-        get_obj_pos(object_index)
-    end)
+local function log_object_data(object_index, frame)
+    local object = object.get(object_index)
 
-    -- There's literally no other way to detect
-    -- if an environment object actually exists.
-    if not s then
+    if not object then
         return
     end
 
     local object_data = {
-        pos = vec3(get_obj_pos(object_index)),
-        rot = mat4(get_obj_rot(object_index)):to_quaternion(),
-        angvel = vec3(get_obj_angular_vel(object_index)),
-        linvel = vec3(get_obj_linear_vel(object_index))
+        position = object:get_position(),
+        rotation = object:get_rotation(),
+        angular_velocity = object:get_angular_velocity(),
+        linear_velocity = object:get_linear_velocity(),
+        color = object:get_color(),
+        scale = object:get_scale()
     }
 
-    local table = table[frame] or {}
-    local objects = table.objects or {}
+    local current_frame_data = frame_data[frame] or {}
+    if current_frame_data.objects == nil then
+        current_frame_data.objects = {}
+    end
 
-    objects[object_index + 1] = object_data
-    table.objects = objects
-    table[frame] = table
+    local new_data = frame_data[frame] or {}
+    local objects = new_data.objects or {}
+    objects[object.object_id] = object_data
+    new_data.objects = objects
+
+    frame_data[frame] = new_data
 end
 
-local function log_player_data(player, frame)
-    local player_data = world.get_fighter_data(fighter.get(player + 1))
+local function log_player_data(player_index, frame)
+    local player_data = world.get_fighter_data(fighter.get(player_index + 1))
 
     local current_frame_data = frame_data[frame] or {}
     if current_frame_data.players == nil then
@@ -93,15 +105,15 @@ local function log_player_data(player, frame)
     if last_frame_data ~= nil then
         -- last_frame_data = last_frame_data.players or {}
         local last_player_data = last_frame_data.players or {}
-        last_player_data[player + 1].grips = player_data.grips
-        last_player_data[player + 1].damages = player_data.damages
+        last_player_data[player_index + 1].grips = player_data.grips
+        last_player_data[player_index + 1].damages = player_data.damages
         last_frame_data.players = last_player_data
         current_frame_data[frame - 1] = last_frame_data
     end
 
     local new_data = frame_data[frame] or {}
     local players = new_data.players or {}
-    players[player + 1] = player_data
+    players[player_index + 1] = player_data
     new_data.players = players
 
     frame_data[frame] = new_data
@@ -207,11 +219,42 @@ function world.get_frame_data(frame)
     return frame_data[frame]
 end
 
+---@param frame number|nil Frame to get data for
+---@param thing fighter|object Thing to get data for
+---@return fd_part|fd_object|JointInfoState|nil Fighter or object data for the given frame and thing. Returns nil if no data is available.
+function world.get_frame_data_auto(frame, thing)
+    local data = world.get_frame_data(frame)
+
+    if not data then
+        return nil
+    end
+
+    local md = getmetatable(thing)
+
+    if md == part then
+        return data.players[thing.fighter_id].parts[thing.part_id]
+    end
+
+    if md == joint then
+        return data.players[thing.fighter_id].joints[thing.joint_id]
+    end
+
+    if md == object then
+        return data.objects[thing.object_id]
+    end
+
+    return nil
+end
+
 local function log_match_frame()
     local state = get_world_state()
     local frame = state.match_frame
     for i = 1, state.num_players do
         log_player_data(i - 1, frame + 1)
+    end
+
+    for i = 1, MAX_ENV_OBJECTS do
+        log_object_data(i - 1, frame + 1)
     end
 end
 

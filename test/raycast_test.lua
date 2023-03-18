@@ -45,7 +45,7 @@ add_hook("mouse_button_down", "test-raycast", function(button, x, y)
     if button ~= 1 then
         return
     end
-    local obj, dist = raycast.screen(x, y, true, false, false, true)
+    local obj, dist = raycast.screen(x, y, true, false, false)
 
     local s, e = pcall(function()
 

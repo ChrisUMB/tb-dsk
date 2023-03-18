@@ -23,10 +23,9 @@ function config.write(data, path)
 
     --local file = io.open(path, "w") -- open the file for writing
     local file = Files:open(path, FILES_MODE_WRITE)
-    file:writeLine()
     for _, section in ipairs(section_names) do
         local properties = data[section]
-        file:write(string.format("[%s]\n", section)) -- write the section name
+        file:writeLine(string.format("[%s]", section)) -- write the section name
         local keys = {} -- a table to store the keys so we can sort them
         for key, _ in pairs(properties) do
             if type(key) ~= "string" or key:sub(1, 1) ~= "#" then -- it's a property
@@ -82,7 +81,9 @@ function config.read(path)
     local comment_str = "" -- a string to accumulate comments
 
     --for line in file:lines() do
-    for line in file:readAll() do
+    -- TODO: Bug in file:readAll() where it doesn't read the last line if it doesn't end with a newline.
+    for _, line in ipairs(file:readAll()) do
+        --println("Read line: \"" .. line .. "\"")
         -- trim leading and trailing whitespace
         line = line:gsub("^%s+", ""):gsub("%s+$", "")
 

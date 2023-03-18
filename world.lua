@@ -173,6 +173,8 @@ function world.get_fighter_data(fighter)
     return fighter_data
 end
 
+---@param fighter fighter Player index
+---@param fighter_data fd_fighter Fighter data
 function world.set_fighter_data(fighter, fighter_data)
     local player = fighter.fighter_id - 1
     for i, v in pairs(PART.NAME) do
@@ -221,7 +223,7 @@ end
 
 ---@param frame number|nil Frame to get data for
 ---@param thing fighter|object Thing to get data for
----@return fd_part|fd_object|JointInfoState|nil Fighter or object data for the given frame and thing. Returns nil if no data is available.
+---@return fd_fighter|fd_part|fd_object|JointInfoState|nil Fighter or object data for the given frame and thing. Returns nil if no data is available.
 function world.get_frame_data_auto(frame, thing)
     local data = world.get_frame_data(frame)
 
@@ -230,6 +232,10 @@ function world.get_frame_data_auto(frame, thing)
     end
 
     local md = getmetatable(thing)
+
+    if md == fighter then
+        return data.players[thing.fighter_id]
+    end
 
     if md == part then
         return data.players[thing.fighter_id].parts[thing.part_id]

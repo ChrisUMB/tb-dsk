@@ -111,14 +111,14 @@ function cmd.lua(args)
 
     local raw = ""
     for i=1,#args do
-        if i ~= 1 then 
-            raw = raw .. " " 
+        if i ~= 1 then
+            raw = raw .. " "
         end
 
         raw = raw .. args[i]
     end
 
-    local s, e = pcall(function() 
+    local s, e = pcall(function()
         local code = loadstring("return " .. raw)
         if code then return {code()} end
     end)
@@ -134,8 +134,8 @@ function cmd.lua(args)
      end
 end
 
-remove_hooks("util-command")
-add_hook("command", "util-commands", function(in_cmd)
+remove_hooks("dsk-commands")
+add_hook("command", "dsk-commands", function(in_cmd)
     
     local split = in_cmd:split(' ')
     

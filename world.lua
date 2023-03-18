@@ -278,4 +278,3 @@ end)
 frame_data = {}
 world_data.game_rules = get_game_rules()
 log_match_frame()
-

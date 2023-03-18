@@ -160,6 +160,10 @@ end
 function hsv_to_rgb(h, s, v)
     local r, g, b
 
+    if h < 0.0 or h >= 1.0 then
+        h = 0.0
+    end
+
     local i = math.floor(h * 6)
     local f = h * 6 - i
     local p = v * (1 - s)

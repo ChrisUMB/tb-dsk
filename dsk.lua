@@ -22,6 +22,7 @@ dofile("dsk/fighter.lua")
 dofile("dsk/objects.lua")
 dofile("dsk/world.lua")
 dofile("dsk/raycast.lua")
+dofile("dsk/config.lua")
 
 DSK = {} -- Just to know if DSK has been loaded.
 

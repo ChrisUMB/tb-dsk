@@ -123,7 +123,7 @@ function cmd.lua(args)
         if code then return {code()} end
     end)
 
-    -- if not s then println(e) end
+     if not s then println(e) end
 
     if e then
         if type(e) == "table" then

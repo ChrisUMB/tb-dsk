@@ -8,7 +8,7 @@
     entering a frame of a replay, and entering the frame of a match.
 
     In order to listen for events, it will look like:
-        listen("game-start", "id", function() 
+        listen("game-start", "id", function()
             println("A game has started!")
         end)
 
@@ -23,82 +23,80 @@
     name or listener purpose after your script name to prevent overriding.
 ]]
 
-local listeners = {}
-local events = {
-    -- Called when a replay or a match has started.
-    "game-start",
-    -- Called when a replay or a match frame is entered.
-    "game-frame",
-    -- Called when a replay or a match is ended.
-    "game-end",
-
-    --Called when a match starts.
-    "match-start",
-    -- Called when a frame is entered during a match.
-    "match-frame",
-    -- Called when a match ends.
-    "match-end",
-    -- Called at the same time as match-end. Start of the frames
-    -- between the match ending and the replay starting.
-    "post-match-start",
-    -- Called when a frame is entered in the post-match stage.
-    "post-match-frame",
-    -- Called at the end of the post match stage.
-    "post-match-end",
-
-    -- Called when a replay is started.
-    "replay-start",
-    -- Called when a frame is entered during a replay.
-    "replay-frame",
-    -- Called when a replay ends.
-    "replay-end",
-
-    "window-resize",
-
-    "draw2d"
-}
-
 EVENTS = {
-    GAME_START = "game-start",
-    GAME_FRAME = "game-frame",
-    GAME_END = "game-end",
+    GAME_START = "game-start",                  -- Called when a replay or a match has started.
+    GAME_FRAME = "game-frame",                  -- Called when a replay or a match frame is entered.
+    GAME_END = "game-end",                      -- Called when a replay or a match is ended.
 
-    MATCH_START = "match-start",
-    MATCH_FRAME = "match-frame",
-    MATCH_END = "match-end",
-    POST_MATCH_START = "post-match-start",
-    POST_MATCH_FRAME = "post-match-frame",
-    POST_MATCH_END = "post-match-end",
+    MATCH_START = "match-start",                -- Called when a match starts.
+    MATCH_FRAME = "match-frame",                -- Called when a frame is entered during a match.
+    MATCH_END = "match-end",                    -- Called when a match ends.
+    POST_MATCH_START = "post-match-start",      -- Called at the same time as match-end. Start of the frames between the match ending and the replay starting.
+    POST_MATCH_FRAME = "post-match-frame",      -- Called when a frame is entered in the post-match stage.
+    POST_MATCH_END = "post-match-end",          -- Called at the end of the post match stage.
 
-    REPLAY_START = "replay-start",
-    REPLAY_FRAME = "replay-frame",
-    REPLAY_END = "replay-end",
+    REPLAY_START = "replay-start",              -- Called when a replay is started.
+    REPLAY_FRAME = "replay-frame",              -- Called when a frame is entered during a replay.
+    REPLAY_END = "replay-end",                  -- Called when a replay ends.
 
-    WINDOW_RESIZE = "window-resize",
-    DRAW2D = "draw2d"
+    WINDOW_RESIZE = "window-resize",            -- Called when the window is resized.
+    DRAW2D = "draw2d"                           -- Called when the 2D drawing hook is called.
 }
 
-function unlisten(id)
-    for event, listener_list in pairs(listeners) do
-        listener_list[id] = nil
+---@class listener
+---@field id string The ID of the listener
+---@field event string The event to listen for
+local listener = {}
+listener.__index = listener
+
+---@type listener[]
+local listeners = {}
+
+local function listener_new(event, id)
+    local l = {
+        id = id,
+        event = event
+    }
+
+    setmetatable(l, listener)
+    println(tostring(l))
+    return l
+end
+
+--- Cancels the listener
+function listener:cancel()
+    println("disabling listener: " .. tostring(self.event) .. " " .. tostring(self.id))
+    unlisten(self.event, self.id)
+end
+
+---@param event string The event to listen for
+---@param id string The ID of the listener
+function unlisten(event, id)
+    if listeners[event] then
+        listeners[event][id] = nil
     end
 end
 
+---@param event string The event to listen for
+---@param id string The ID of the listener
+---@param func function The function to call when the event is fired
+---@return listener The listener
 function listen(event, id, func)
     local others = listeners[event] or {}
     others[id] = func
     listeners[event] = others
+    return listener_new(event, id)
 end
 
 function call_event(event, ...)
-    local listeners = listeners[event]
-    if not listeners then
+    local event_listeners = listeners[event]
+    if not event_listeners then
         return
     end
 
     local args = ...
 
-    for i, listener_func in pairs(listeners) do
+    for i, listener_func in pairs(event_listeners) do
         local s, e = pcall(function()
             listener_func(args)
         end)

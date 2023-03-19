@@ -56,7 +56,7 @@ function joint.get(fighter_id, joint_id)
         fighter_id = fighter_id,
         joint_id = joint_id
     }
-    
+
     setmetatable(result, joint)
     return result
 end
@@ -164,7 +164,7 @@ function part.get(fighter_id, part_id)
         assert("part.get(fighter_id, part_id) received an invalid part ID: " .. tostring(part_id))
         return nil
     end
-    
+
     local result = {
         fighter_id = fighter_id,
         part_id = part_id
@@ -309,6 +309,31 @@ function part:get_shape()
     return get_body_info(self.fighter_id - 1, self.part_id - 1).shape + 1
 end
 
+---@class part_transform
+---@field position vec3
+---@field rotation quat
+---@field scale vec3
+---@field angular_velocity vec3
+---@field linear_velocity vec3
+---@field shape number
+
+---@return part_transform
+function part:get_transform()
+    if self == part then
+        assert("part:get_transform() illegally called statically.")
+        return nil
+    end
+
+    return {
+        position = self:get_position(),
+        rotation = self:get_rotation(),
+        scale = self:get_scale(),
+        angular_velocity = self:get_angular_velocity(),
+        linear_velocity = self:get_linear_velocity(),
+        shape = self:get_shape()
+    }
+end
+
 function part:get_id()
     return self.part_id
 end
@@ -332,7 +357,7 @@ function fighter.get(fighter_id)
     --end
 
     local result = {
-       fighter_id = fighter_id
+        fighter_id = fighter_id
     }
 
     setmetatable(result, fighter)
@@ -427,7 +452,7 @@ function fighter:get_parts()
     end
 
     local result = {}
-    for id,name in pairs(PART.ID) do
+    for id, name in pairs(PART.ID) do
         result[id] = self:get_part(id)
     end
 
@@ -473,7 +498,7 @@ function fighter:get_joints()
     end
 
     local result = {}
-    for id,name in pairs(PART.ID) do
+    for id, name in pairs(PART.ID) do
         result[id] = self:get_joint(id)
     end
 
@@ -487,10 +512,10 @@ function fighter:set_position(...)
     end
 
     local new_position = vec3(...)
-    
+
     local origin = self:get_position()
 
-    for id,name in pairs(PARTS.ID) do
+    for id, name in pairs(PARTS.ID) do
         local part = self:get_part(id)
         local current_position = part:get_position()
         part:set_position((current_position - origin) + new_position)
@@ -504,7 +529,7 @@ function fighter:get_position()
     end
 
     local sum = vec3()
-    for id,name in pairs(PARTS.ID) do
+    for id, name in pairs(PARTS.ID) do
         sum = sum + self:get_part(id):get_position()
     end
 
@@ -519,7 +544,7 @@ function fighter:translate_position(...)
     end
 
     local offset = vec3(...)
-    for id,name in pairs(PARTS.ID) do
+    for id, name in pairs(PARTS.ID) do
         self:get_part(id):translate_position(offset)
     end
 end
@@ -539,8 +564,8 @@ function fighter:set_force(...)
     end
 
     local force = vec3(...)
-    
-    for id,name in pairs(PART.ID) do
+
+    for id, name in pairs(PART.ID) do
         self:get_part(id):set_force(force)
     end
 end

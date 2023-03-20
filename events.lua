@@ -1,46 +1,72 @@
--- [ Decap Scripting Kit ] --
+local listen
 
---[[
-    This is the events module. It's a sort of wrapper/addition to hooks,
-    and uses them internally. The goal of the events system is to pre-handle
-    all of the possible if checks you usually might have to make to differentiate
-    between a specific state a hook was called in, i.e the difference between
-    entering a frame of a replay, and entering the frame of a match.
+---@class Event
 
-    In order to listen for events, it will look like:
-        listen("game-start", "id", function()
-            println("A game has started!")
-        end)
+---@generic T : Event
+---@class EventType<T>
+---@field id string The ID of the event type
 
-    The "id" parameter is not particularly important for functionality,
-    however it is advised you choose a unique ID for your events that
-    relates to your script, that way you don't possibly override somebody
-    elses listener for that event. A good practice to follow is to do:
-        listen("event", "SCRIPT_NAME", function() end)
+---@generic T : Event
+---@type EventType<T>
+local EventType = {}
+EventType.__index = EventType
 
-    The only time this might be a problem is if you have multiple listeners
-    for the same event throughout your script, so you might append the event
-    name or listener purpose after your script name to prevent overriding.
-]]
+---@generic T : Event
+---@param self EventType<T>
+---@param hook_id string The ID of the hook
+---@param callback fun(event:T) The callback to call when the event is fired
+function EventType.listen(self, hook_id, callback)
 
-EVENTS = {
-    GAME_START = "game-start",                  -- Called when a replay or a match has started.
-    GAME_FRAME = "game-frame",                  -- Called when a replay or a match frame is entered.
-    GAME_END = "game-end",                      -- Called when a replay or a match is ended.
+end
 
-    MATCH_START = "match-start",                -- Called when a match starts.
-    MATCH_FRAME = "match-frame",                -- Called when a frame is entered during a match.
-    MATCH_END = "match-end",                    -- Called when a match ends.
-    POST_MATCH_START = "post-match-start",      -- Called at the same time as match-end. Start of the frames between the match ending and the replay starting.
-    POST_MATCH_FRAME = "post-match-frame",      -- Called when a frame is entered in the post-match stage.
-    POST_MATCH_END = "post-match-end",          -- Called at the end of the post match stage.
+---@param id string The ID of the event
+---@return EventType
+local function create_event_type(id)
+    local event_type = {
+        id = id
+    }
 
-    REPLAY_START = "replay-start",              -- Called when a replay is started.
-    REPLAY_FRAME = "replay-frame",              -- Called when a frame is entered during a replay.
-    REPLAY_END = "replay-end",                  -- Called when a replay ends.
+    event_type.__index = event_type
 
-    WINDOW_RESIZE = "window-resize",            -- Called when the window is resized.
-    DRAW2D = "draw2d"                           -- Called when the 2D drawing hook is called.
+    setmetatable(event_type, event_type)
+    return event_type
+end
+
+---@type table<string, EventType>
+Events = {
+    GAME_START = "game-start", -- Called when a replay or a match has started.
+    GAME_FRAME = "game-frame", -- Called when a replay or a match frame is entered.
+    GAME_END = "game-end", -- Called when a replay or a match is ended.
+
+    MATCH_START = "match-start", -- Called when a match starts.
+    MATCH_FRAME = "match-frame", -- Called when a frame is entered during a match.
+    MATCH_END = "match-end", -- Called when a match ends.
+    POST_MATCH_START = "post-match-start", -- Called at the same time as match-end. Start of the frames between the match ending and the replay starting.
+    POST_MATCH_FRAME = "post-match-frame", -- Called when a frame is entered in the post-match stage.
+    POST_MATCH_END = "post-match-end", -- Called at the end of the post match stage.
+
+    REPLAY_START = "replay-start", -- Called when a replay is started.
+    REPLAY_FRAME = "replay-frame", -- Called when a frame is entered during a replay.
+    REPLAY_END = "replay-end", -- Called when a replay ends.
+
+    ---@class WindowResizeEvent : Event
+    ---@field new_size vec2 The new size of the window.
+    ---@field old_size vec2 The old size of the window.
+
+    ---@type EventType<WindowResizeEvent>
+    --- Called whenever the window is resized.
+    WINDOW_RESIZE = "window-resize",
+
+    DRAW_2D = "draw2d", -- Called when the 2D drawing hook is called.,
+
+    ---@class KeyDownEvent : Event
+    ---@field x number The x position of the mouse.
+    ---@field y number The y position of the mouse.
+    ---@field key number The key that was pressed.
+
+    ---@type EventType<KeyDownEvent>
+    --- Called whenever a key is pressed.
+    KEY_DOWN = "key-down"
 }
 
 ---@class listener
@@ -59,13 +85,11 @@ local function listener_new(event, id)
     }
 
     setmetatable(l, listener)
-    println(tostring(l))
     return l
 end
 
 --- Cancels the listener
 function listener:cancel()
-    println("disabling listener: " .. tostring(self.event) .. " " .. tostring(self.id))
     unlisten(self.event, self.id)
 end
 
@@ -77,9 +101,10 @@ function unlisten(event, id)
     end
 end
 
----@param event string The event to listen for
+---@generic T : Event
+---@param event EventType<T> The event to listen for
 ---@param id string The ID of the listener
----@param func function The function to call when the event is fired
+---@param func fun(event:T) The function to call when the event is fired
 ---@return listener The listener
 function listen(event, id, func)
     local others = listeners[event] or {}
@@ -88,17 +113,22 @@ function listen(event, id, func)
     return listener_new(event, id)
 end
 
-function call_event(event, ...)
-    local event_listeners = listeners[event]
+Events.WINDOW_RESIZE:listen("dsk-event-system", function(event)
+
+end)
+
+---@generic T : Event
+---@param event_type EventType<T> The event to call
+---@param event T The event to pass to the listeners
+function call_event(event_type, event)
+    local event_listeners = listeners[event_type]
     if not event_listeners then
         return
     end
 
-    local args = ...
-
-    for i, listener_func in pairs(event_listeners) do
+    for _, listener_func in pairs(event_listeners) do
         local s, e = pcall(function()
-            listener_func(args)
+            listener_func(event)
         end)
 
         if not s then
@@ -126,25 +156,10 @@ local previous_frame = get_world_state().match_frame
 
 local last_size = vec2(get_window_size())
 
-add_hook("pre_draw", HOOK_ID, function()
+add_hook("enter_frame", HOOK_ID, function()
     local state = get_world_state()
-    local mode = state.replay_mode
     local frame = state.match_frame
-
-    local cache_last_size = last_size
-    last_size = vec2(get_window_size())
-    if cache_last_size ~= last_size then
-        -- last_size here is the new size, cached is the old.
-        call_event("window-resize", last_size, cache_last_size)
-    end
-
-    local frame_delta = frame - previous_frame
-    if frame_delta == 0 then
-        return
-    elseif frame_delta > 1 then
-        -- TODO: Why was this printing all the time
-        --println("Frame delta was greater than 1.")
-    end
+    local mode = state.replay_mode
 
     if frame == 0 then
         if mode == MODE_REPLAY then
@@ -155,7 +170,6 @@ add_hook("pre_draw", HOOK_ID, function()
 
             call_event("replay-start", state)
         end
-
     end
 
     call_event("game-frame", state)
@@ -170,6 +184,60 @@ add_hook("pre_draw", HOOK_ID, function()
 
     previous_frame = frame
 end)
+
+add_hook("resolution_changed", HOOK_ID, function()
+    call_event(Events.WINDOW_RESIZE, {
+        new_size = vec2(get_window_size()),
+        old_size = last_size
+    })
+
+    last_size = vec2(get_window_size())
+end)
+
+--add_hook("pre_draw", HOOK_ID, function()
+--    local state = get_world_state()
+--    local mode = state.replay_mode
+--    local frame = state.match_frame
+--
+--    --local cache_last_size = last_size
+--    --last_size = vec2(get_window_size())
+--    --if cache_last_size ~= last_size then
+--    --    -- last_size here is the new size, cached is the old.
+--    --    call_event("window-resize", last_size, cache_last_size)
+--    --end
+--
+--    local frame_delta = frame - previous_frame
+--    if frame_delta == 0 then
+--        return
+--    elseif frame_delta > 1 then
+--        -- TODO: Why was this printing all the time
+--        --println("Frame delta was greater than 1.")
+--    end
+--
+--    if frame == 0 then
+--        if mode == MODE_REPLAY then
+--            if not post_match_over then
+--                post_match_over = true
+--                call_event("post-match-end", state)
+--            end
+--
+--            call_event("replay-start", state)
+--        end
+--
+--    end
+--
+--    call_event("game-frame", state)
+--
+--    if not post_match_over and match_over then
+--        call_event("post-match-frame", state)
+--    elseif mode == MODE_REPLAY then
+--        call_event("replay-frame", state)
+--    elseif mode == MODE_MATCH then
+--        call_event("match-frame", state)
+--    end
+--
+--    previous_frame = frame
+--end)
 
 add_hook("leave_game", HOOK_ID, function()
     local state = get_world_state()
@@ -198,5 +266,5 @@ add_hook("match_begin", HOOK_ID, function()
 end)
 
 add_hook("draw2d", HOOK_ID, function()
-    call_event("draw2d", get_world_state())
+    call_event(EVENTS.DRAW2D)
 end)

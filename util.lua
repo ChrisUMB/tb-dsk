@@ -27,6 +27,23 @@ else
     end
 end
 
+---@param v string The string to print
+--- Prints a formatted string to chat.
+function printfln(v, ...)
+    println(v:format(...))
+end
+
+---@param v string The string to print
+--- Prints a formatted string to chat, to-stringing all arguments.
+function printflns(v, ...)
+    local args = { ... }
+    for i = 1, #args do
+        args[i] = tostring(args[i])
+    end
+
+    println(v:format(table.unpack(args)))
+end
+
 function tab_string(tabs)
     return string.rep("\t", tabs)
 end

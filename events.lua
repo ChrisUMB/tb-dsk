@@ -19,6 +19,13 @@ function EventType.listen(self, hook_id, callback)
 
 end
 
+---@generic T : Event
+---@param self EventType<T>
+---@param event T The event to pass to the listeners
+function EventType.call(self, event)
+
+end
+
 ---@param id string The ID of the event
 ---@return EventType
 local function create_event_type(id)
@@ -52,18 +59,19 @@ Events = {
     ---@class WindowResizeEvent : Event
     ---@field new_size vec2 The new size of the window.
     ---@field old_size vec2 The old size of the window.
-
     ---@type EventType<WindowResizeEvent>
     --- Called whenever the window is resized.
     WINDOW_RESIZE = "window-resize",
 
-    DRAW_2D = "draw2d", -- Called when the 2D drawing hook is called.,
+    ---@class Draw2DEvent : Event
+    ---@type EventType<Draw2DEvent>
+    --- Called when the 2D drawing hook is called.
+    DRAW_2D = "draw2d",
 
     ---@class KeyDownEvent : Event
     ---@field x number The x position of the mouse.
     ---@field y number The y position of the mouse.
     ---@field key number The key that was pressed.
-
     ---@type EventType<KeyDownEvent>
     --- Called whenever a key is pressed.
     KEY_DOWN = "key-down"

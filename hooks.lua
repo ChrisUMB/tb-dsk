@@ -149,86 +149,305 @@ unknown console_post(string msg, int type, int tab)
 
 ---@type table<string, HookType>
 Hooks = {
-    ---@class GameStart : HookData
-    ---@type HookType<GameStart>
-    --- Called when a replay or a match has started.
-    GAME_START = new_hook("game-start"),
+    ---@class NewGameEvent : HookData
+    ---@type HookType<NewGameEvent>
+    --- Called on new game or world initialization
+    NEW_GAME = new_hook("new_game"),
 
-    ---@class GameFrame : HookData
-    ---@type HookType<GameFrame>
-    --- Called when a replay or a match frame is entered.
-    GAME_FRAME = new_hook("game-frame"),
+    ---@class NewMPGameEvent : HookData
+    ---@type HookType<NewMPGameEvent>
+    --- Called when user joins a multiplayer room
+    NEW_MP_GAME = new_hook("new_mp_game"),
 
-    ---@class GameEnd : HookData
-    ---@type HookType<GameEnd>
-    --- Called when a replay or a match is ended.
-    GAME_END = new_hook("game-end"),
+    ---@class EnterFrameEvent : HookData
+    ---@type HookType<EnterFrameEvent>
+    --- Called in physics stepper before running frame events
+    ENTER_FRAME = new_hook("enter_frame"),
 
+    ---@class EndGameEvent : HookData
+    ---@field end_type number The type of end game.
+    ---@type HookType<EndGameEvent>
+    --- Called on game end
+    END_GAME = new_hook("end_game"),
 
-    ---@class MatchStart : HookData
-    ---@type HookType<MatchStart>
-    --- Called when a match starts.
-    MATCH_START = new_hook("match-start"),
+    ---@class LeaveGameEvent : HookData
+    ---@type HookType<LeaveGameEvent>
+    --- Called before leaving current game. May be triggered before new game, on replay load, etc.
+    LEAVE_GAME = new_hook("leave_game"),
 
-    ---@class MatchFrame : HookData
-    ---@type HookType<MatchFrame>
-    --- Called when a frame is entered during a match.
-    MATCH_FRAME = new_hook("match-frame"),
+    ---@class EnterFreezeEvent : HookData
+    ---@type HookType<EnterFreezeEvent>
+    --- Called when we enter edit mode during the fight
+    ENTER_FREEZE = new_hook("enter_freeze"),
 
-    ---@class MatchEnd : HookData
-    ---@type HookType<MatchEnd>
-    --- Called when a match ends.
-    MATCH_END = new_hook("match-end"),
+    ---@class ExitFreezeEvent : HookData
+    ---@type HookType<ExitFreezeEvent>
+    --- Called when we exit edit mode during the fight
+    EXIT_FREEZE = new_hook("exit_freeze"),
 
-    ---@class PostMatchStart : HookData
-    ---@type HookType<PostMatchStart>
-    --- Called at the same time as match-end. Start of the frames between the match ending and the replay starting.
-    POST_MATCH_START = new_hook("post-match-start"),
+    ---@class PlayerSelectEvent : HookData
+    ---@field player number The player that was selected.
+    ---@type HookType<PlayerSelectEvent>
+    --- Called when a new player is selected (including empty player selection)
+    PLAYER_SELECT = new_hook("player_select"),
 
-    ---@class PostMatchFrame : HookData
-    ---@type HookType<PostMatchFrame>
-    --- Called when a frame is entered in the post-match stage.
-    POST_MATCH_FRAME = new_hook("post-match-frame"),
+    ---@class SpecSelectPlayerEvent : HookData
+    ---@field player number The player that was selected.
+    ---@field body number The body part of the player that was selected.
+    ---@field joint number The joint of the player that was selected.
+    ---@type HookType<SpecSelectPlayerEvent>
+    --- Called when clicking on a player while being a spectator in Multiplayer
+    SPEC_SELECT_PLAYER = new_hook("spec_select_player"),
 
-    ---@class PostMatchEndEvent : HookData
-    ---@type HookType<PostMatchEndEvent>
-    --- Called at the end of the post match stage.
-    POST_MATCH_END = new_hook("post-match-end"),
-
-    ---@class ReplayStartEvent : HookData
-    ---@type HookType<ReplayStartEvent>
-    --- Called when a replay starts.
-    REPLAY_START = new_hook("replay-start"),
-
-    ---@class ReplayFrameEvent : HookData
-    ---@type HookType<ReplayFrameEvent>
-    --- Called when a frame is entered during a replay.
-    REPLAY_FRAME = new_hook("replay-frame"),
-
-    ---@class ReplayEndEvent : HookData
-    ---@type HookType<ReplayEndEvent>
-    --- Called when a replay ends.
-    REPLAY_END = new_hook("replay-end"),
-
-    ---@class WindowResizeEvent : HookData
-    ---@field new_size vec2 The new size of the window.
-    ---@field old_size vec2 The old size of the window.
-    ---@type HookType<WindowResizeEvent>
-    --- Called whenever the window is resized.
-    WINDOW_RESIZE = new_hook("window-resize"),
-
-    ---@class Draw2DEvent : HookData
-    ---@type HookType<Draw2DEvent>
-    --- Called when the 2D drawing hook is called.
+    ---@class Draw2dEvent : HookData
+    ---@type HookType<Draw2dEvent>
+    --- Main 2D graphics loop
     DRAW_2D = new_hook("draw2d"),
 
+    ---@class Draw3dEvent : HookData
+    ---@type HookType<Draw3dEvent>
+    --- Main 3D graphics loop
+    DRAW_3D = new_hook("draw3d"),
+
+    ---@class PlayEvent : HookData
+    ---@type HookType<PlayEvent>
+    --- Part of the old Torishop, deprecated
+    PLAY = new_hook("play"),
+
+    ---@class MatchBeginEvent : HookData
+    ---@type HookType<MatchBeginEvent>
+    --- Called shortly before the new game
+    MATCH_BEGIN = new_hook("match_begin"),
+
+    ---@class KeyUpEvent : HookData
+    ---@field key number The key that was released.
+    ---@field scancode number The scancode of the key that was released.
+    --- Returns a number indicating whether the event should be discarded.
+    ---@type HookType<KeyUpEvent>
+    --- Called on keyboard key up event
+    KEY_UP = new_hook("key-up"),
+
     ---@class KeyDownEvent : HookData
-    ---@field x number The x position of the mouse.
-    ---@field y number The y position of the mouse.
     ---@field key number The key that was pressed.
+    ---@field scancode number The scancode of the key that was pressed.
+    --- Returns a number indicating whether the event should be discarded.
     ---@type HookType<KeyDownEvent>
-    --- Called whenever a key is pressed.
-    KEY_DOWN = new_hook("key-down")
+    --- Called on keyboard key down event
+    KEY_DOWN = new_hook("key-down"),
+
+    ---@class MouseButtonUpEvent : HookData
+    ---@field button number The mouse button that was released.
+    ---@field x number The x coordinate of the mouse.
+    ---@field y number The y coordinate of the mouse.
+    --- Returns a number indicating whether the event should be discarded.
+    ---@type HookType<MouseButtonUpEvent>
+    --- Called on mouse button / touch up event
+    MOUSE_BUTTON_UP = new_hook("mouse-button-up"),
+
+    ---@class MouseButtonDownEvent : HookData
+    ---@field button number The mouse button that was pressed.
+    ---@field x number The x coordinate of the mouse.
+    ---@field y number The y coordinate of the mouse.
+    --- Returns a number indicating whether the event should be discarded.
+    ---@type HookType<MouseButtonDownEvent>
+    --- Called on mouse button / touch down event
+    MOUSE_BUTTON_DOWN = new_hook("mouse-button-down"),
+
+    ---@class MouseMoveEvent : HookData
+    ---@field x number The x coordinate of the mouse.
+    ---@field y number The y coordinate of the mouse.
+    --- Returns a number indicating whether the event should be discarded.
+    ---@type HookType<MouseMoveEvent>
+    --- Called on mouse move / swipe event
+    MOUSE_MOVE = new_hook("mouse-move"),
+
+    ---@class JointSelectEvent : HookData
+    ---@field player number The player that was selected.
+    ---@field joint number The joint of the player that was selected.
+    ---@type HookType<JointSelectEvent>
+    --- Called when new joint is selected (including empty joint selection)
+    JOINT_SELECT = new_hook("joint_select"),
+
+    ---@class BodySelectEvent : HookData
+    ---@field player number The player that was selected.
+    ---@field body number The body part of the player that was selected.
+    ---@type HookType<BodySelectEvent>
+    --- Called when new bodypart is selected (including empty bodypart selection)
+    BODY_SELECT = new_hook("body_select"),
+
+    ---@class KeyHoldEvent : HookData
+    ---@field key number The key that is being held.
+    ---@field scancode number The scancode of the key that is being held.
+    --- Returns a number indicating whether the event should be discarded.
+    ---@type HookType<KeyHoldEvent>
+    --- Called when holding a keyboard key
+    KEY_HOLD = new_hook("key-hold"),
+
+    ---@class ConsoleEvent : HookData
+    ---@field s string The message that was received.
+    ---@field type number The type of message.
+    ---@field tab number The tab the message was sent to.
+    --- Returns a number indicating whether the event should be discarded.
+    ---@type HookType<ConsoleEvent>
+    --- Called when chat receives a new message
+    CONSOLE = new_hook("console"),
+
+    ---@class CommandEvent : HookData
+    ---@field command string The command that was entered.
+    --- Returns a number indicating whether the event should be discarded.
+    ---@type HookType<CommandEvent>
+    --- Called when an unused /command is entered
+    COMMAND = new_hook("command"),
+
+    ---@class CameraEvent : HookData
+    ---@type HookType<CameraEvent>
+    --- Main camera loop
+    CAMERA = new_hook("camera"),
+
+    ---@class ConsolePostEvent : HookData
+    ---@field msg string The message that was received.
+    ---@field type number The type of message.
+    ---@field tab number The tab the message was sent to.
+    ---@type HookType<ConsolePostEvent>
+    --- Called after a non-discarded console hook call
+    CONSOLE_POST = new_hook("console_post"),
+
+    ---@class TextInputEvent : HookData
+    ---@field text string The text that was input.
+    ---@type HookType<TextInputEvent>
+    --- Called when text input event is received
+    TEXT_INPUT = new_hook("text_input"),
+
+    ---@class PostDraw3dEvent : HookData
+    ---@type HookType<PostDraw3dEvent>
+    --- Additional 3D graphics loop, executed after all other drawing is done
+    POST_DRAW_3D = new_hook("post_draw3d"),
+
+    ---@class DrawViewportEvent : HookData
+    ---@type HookType<DrawViewportEvent>
+    --- Main viewport graphics loop
+    DRAW_VIEWPORT = new_hook("draw_viewport"),
+
+    ---@class PreDrawEvent : HookData
+    ---@type HookType<PreDrawEvent>
+    --- Called before any other drawing callbacks
+    PRE_DRAW = new_hook("pre_draw"),
+
+    ---@class NewGameMPEvent : HookData
+    ---@type HookType<NewGameMPEvent>
+    --- Called on new multiplayer game
+    NEW_GAME_MP = new_hook("new_game_mp"),
+
+    ---@class NetworkCompleteEvent : HookData
+    ---@type HookType<NetworkCompleteEvent>
+    --- Called on successful network request completion
+    NETWORK_COMPLETE = new_hook("network_complete"),
+
+    ---@class NetworkErrorEvent : HookData
+    ---@type HookType<NetworkErrorEvent>
+    --- Called on network request error
+    NETWORK_ERROR = new_hook("network_error"),
+
+    ---@class DownloaderCompleteEvent : HookData
+    ---@field filename string The name of the file that finished downloading.
+    ---@type HookType<DownloaderCompleteEvent>
+    --- Called when a file from the queue has finished downloading
+    DOWNLOADER_COMPLETE = new_hook("downloader_complete"),
+
+    ---@class ReplayIntegrityFailEvent : HookData
+    ---@field frame number The frame at which the replay hacking was detected.
+    ---@type HookType<ReplayIntegrityFailEvent>
+    --- Called when replay hacking is detected during replay playthrough with check_integrity mode enabled
+    REPLAY_INTEGRITY_FAIL = new_hook("replay_integrity_fail"),
+
+    ---@class FilebrowserSelectEvent : HookData
+    ---@field filename string The name of the file that was selected.
+    ---@type HookType<FilebrowserSelectEvent>
+    --- Called on platform-specific file browser exit
+    FILEBROWSER_SELECT = new_hook("filebrowser_select"),
+
+    ---@class ModTriggerEvent : HookData
+    ---@field p1 number The first parameter of the mod trigger.
+    ---@field p2 number The second parameter of the mod trigger.
+    ---@field b1 number The third parameter of the mod trigger.
+    ---@field b2 number The fourth parameter of the mod trigger.
+    ---@type HookType<ModTriggerEvent>
+    --- Called when a mod trigger is invoked
+    MOD_TRIGGER = new_hook("mod_trigger"),
+
+    ---@class ResolutionChangedEvent : HookData
+    ---@type HookType<ResolutionChangedEvent>
+    --- Called when game resolution is updated
+    RESOLUTION_CHANGED = new_hook("resolution_changed"),
+
+    ---@class UnloadEvent : HookData
+    ---@type HookType<UnloadEvent>
+    --- Called on loading a new script
+    UNLOAD = new_hook("unload"),
+
+    ---@class BoutMouseDownEvent : HookData
+    ---@field i number The index of the bout in the list.
+    ---@type HookType<BoutMouseDownEvent>
+    --- Called on mouse button down event for room queue bout list
+    BOUT_MOUSE_DOWN = new_hook("bout_mouse_down"),
+
+    ---@class BoutMouseUpEvent : HookData
+    ---@field i number The index of the bout in the list.
+    ---@type HookType<BoutMouseUpEvent>
+    --- Called on mouse button up event for room queue bout list
+    BOUT_MOUSE_UP = new_hook("bout_mouse_up"),
+
+    ---@class BoutMouseOverEvent : HookData
+    ---@field i number The index of the bout in the list.
+    ---@type HookType<BoutMouseOverEvent>
+    --- deprecated
+    BOUT_MOUSE_OVER = new_hook("bout_mouse_over"),
+
+    ---@class BoutMouseOutsideEvent : HookData
+    ---@field i number The index of the bout in the list.
+    ---@type HookType<BoutMouseOutsideEvent>
+    --- deprecated
+    BOUT_MOUSE_OUTSIDE = new_hook("bout_mouse_outside"),
+
+    ---@class SpecMouseDownEvent : HookData
+    ---@field i number The index of the spectator in the list.
+    ---@type HookType<SpecMouseDownEvent>
+    --- Called on mouse button down event for room queue spec list
+    SPEC_MOUSE_DOWN = new_hook("spec_mouse_down"),
+
+    ---@class SpecMouseUpEvent : HookData
+    ---@field i number The index of the spectator in the list.
+    ---@type HookType<SpecMouseUpEvent>
+    --- Called on mouse button up event for room queue spec list
+    SPEC_MOUSE_UP = new_hook("spec_mouse_up"),
+
+    ---@class SpecMouseOverEvent : HookData
+    ---@field i number The index of the spectator in the list.
+    ---@type HookType<SpecMouseOverEvent>
+    --- deprecated
+    SPEC_MOUSE_OVER = new_hook("spec_mouse_over"),
+
+    ---@class SpecMouseOutsideEvent : HookData
+    ---@field i number The index of the spectator in the list.
+    ---@type HookType<SpecMouseOutsideEvent>
+    --- deprecated
+    SPEC_MOUSE_OUTSIDE = new_hook("spec_mouse_outside"),
+
+    ---@class BoutUpdateEvent : HookData
+    ---@type HookType<BoutUpdateEvent>
+    --- Called after bout list update is finished
+    BOUT_UPDATE = new_hook("bout_update"),
+
+    ---@class SpecUpdateEvent : HookData
+    ---@type HookType<SpecUpdateEvent>
+    --- Called when spectator status update is received
+    SPEC_UPDATE = new_hook("spec_update"),
+
+    ---@class RoomlistUpdateEvent : HookData
+    ---@field error string The error message, if any.
+    ---@type HookType<RoomlistUpdateEvent>
+    --- Called on room list info request completion
+    ROOMLIST_UPDATE = new_hook("roomlist_update")
 }
 
 local HOOK_ID = "dsk-events"
@@ -254,21 +473,22 @@ add_hook("enter_frame", HOOK_ID, function()
         if mode == MODE_REPLAY then
             if not post_match_over then
                 post_match_over = true
-                Hooks.POST_MATCH_END:call()
+                --Hooks.POST_MATCH_END:call()
             end
 
-            Hooks.REPLAY_START:call()
+            --Hooks.REPLAY_START:call()
         end
     end
 
-    Hooks.GAME_FRAME:call()
+    --Hooks.GAME_FRAME:call()
+    Hooks.ENTER_FRAME:call()
 
     if not post_match_over and match_over then
-        Hooks.POST_MATCH_FRAME:call()
+        --Hooks.POST_MATCH_FRAME:call()
     elseif mode == MODE_REPLAY then
-        Hooks.REPLAY_FRAME:call()
+        --Hooks.REPLAY_FRAME:call()
     elseif mode == MODE_MATCH then
-        Hooks.MATCH_FRAME:call()
+        --Hooks.MATCH_FRAME:call()
     end
 end)
 
@@ -333,7 +553,7 @@ add_hook("leave_game", HOOK_ID, function()
         return
     end
 
-    Hooks.REPLAY_END:call()
+    --Hooks.REPLAY_END:call()
 end)
 
 add_hook("end_game", HOOK_ID, function()
@@ -341,20 +561,22 @@ add_hook("end_game", HOOK_ID, function()
         return
     end
     match_over = true
-    Hooks.MATCH_END:call()
-    Hooks.POST_MATCH_START:call()
+    --Hooks.MATCH_END:call()
+    --Hooks.POST_MATCH_START:call()
+    Hooks.END_GAME:call()
 end)
 
 add_hook("match_begin", HOOK_ID, function()
     match_over = false
     post_match_over = false
-    Hooks.MATCH_START:call()
+    --Hooks.MATCH_START:call()
+    Hooks.MATCH_BEGIN:call()
 end)
 
 add_hook("draw2d", HOOK_ID, function()
     Hooks.DRAW_2D:call()
 end)
 
-Hooks.REPLAY_FRAME:listen("test", function()
-
-end)
+--Hooks.REPLAY_FRAME:listen("test", function()
+--
+--end)

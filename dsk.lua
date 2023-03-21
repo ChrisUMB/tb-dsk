@@ -16,7 +16,7 @@ dofile("dsk/constants.lua")
 
 dofile("dsk/cmd.lua")
 dofile("dsk/keyboard.lua")
-dofile("dsk/events.lua")
+dofile("dsk/hooks.lua")
 dofile("dsk/fighter.lua")
 dofile("dsk/objects.lua")
 dofile("dsk/world.lua")
